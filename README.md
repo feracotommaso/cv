@@ -13,7 +13,7 @@ The workbook is the **only file that should normally be edited**. All CV version
 ├── assets/
 │   ├── badges/
 │   ├── generated/
-│   └── signature.png
+│   └── signature.png [git-ignored]
 │
 ├── data/
 │   └── cv.xlsx
@@ -93,6 +93,8 @@ The CV can be rendered in
 ---
 
 # Rendering
+
+Before rendering, add your `signature.png` file in the `assets/` folder
 
 ## Full English CV
 
