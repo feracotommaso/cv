@@ -1,7 +1,0 @@
-_output/
-assets/generated/*.png
-*.aux
-*.log
-*.tex
-
-/.quarto/

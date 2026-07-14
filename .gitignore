@@ -1,7 +1,10 @@
 _output/
 assets/generated/*.png
+assets/signature.png
+docs/assets/
 *.aux
 *.log
 *.tex
 
 /.quarto/
+.Rproj.user

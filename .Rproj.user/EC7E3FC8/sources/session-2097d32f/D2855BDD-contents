@@ -1,5 +1,0 @@
-project:
-  type: default
-  output-dir: docs #_output
-  resources:
-    - assets/**
