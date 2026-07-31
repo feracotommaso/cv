@@ -80,9 +80,10 @@ section_recommendation_letters <- function(cv, lang) {
 
 section_teaching <- function(cv, lang) {
   emit_heading(cv_label(cv, "teaching", lang), section_heading_level())
-  data <- sort_by_order(shown_rows(cv$teaching))
+  data <- shown_rows(cv$teaching)
   for (type in c("main", "assistant")) {
     subset <- data[data$type == type, , drop = FALSE]
+    subset <- sort_records_newest_first(subset)
     if (!nrow(subset)) next
     emit_heading(cv_label(cv, paste0("teaching_", type), lang), subsection_heading_level())
     clean_table_text <- function(x) gsub("\\*", "", as.character(x))

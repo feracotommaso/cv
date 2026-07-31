@@ -81,6 +81,27 @@ Examples:
 
 Normally there is **no need to modify any R script**.
 
+## Adding new records: IDs and order
+
+Record IDs are permanent identifiers. Do **not** renumber existing IDs when a new row is added. Use the next unused numeric suffix, for example:
+
+```text
+past_positions_007
+pub_051
+```
+
+The ID does not determine where the record appears in the CV.
+
+For the `entries`, `teaching`, and `publications` sheets, the `order` field is append-only:
+
+- in `entries`, use `max(order) + 1` within the relevant `section`;
+- in `teaching`, use `max(order) + 1` within the relevant `type`;
+- in `publications`, use `max(order) + 1` within the relevant `category`.
+
+Larger order values are printed first, so a newly added record appears before older records without changing previous rows. The renderer preserves the established order of subsections.
+
+The `order` fields in `versions`, `metrics`, and `declarations` remain conventional ascending display positions and should not be treated as chronological append-only fields.
+
 ---
 
 # Languages

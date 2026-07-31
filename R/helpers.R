@@ -65,9 +65,47 @@ shown_rows <- function(data) {
   data[!is.na(data$show) & data$show, , drop = FALSE]
 }
 
-sort_by_order <- function(data) {
+sort_by_order <- function(data, decreasing = FALSE) {
   if (!"order" %in% names(data)) return(data)
-  data[order(suppressWarnings(as.numeric(data$order)), na.last = TRUE), , drop = FALSE]
+  values <- suppressWarnings(as.numeric(data$order))
+  if (isTRUE(decreasing)) values <- -values
+  data[order(values, seq_len(nrow(data)), na.last = TRUE), , drop = FALSE]
+}
+
+record_group_key <- function(data, group_cols = NULL) {
+  key <- rep("", nrow(data))
+  for (column in intersect(group_cols %||% character(), names(data))) {
+    value <- trimws(as.character(data[[column]]))
+    use <- !nonempty(key) & nonempty(value)
+    key[use] <- value[use]
+  }
+  key
+}
+
+# Chronological CV records use append-only order values: larger values are
+# newer and are printed first. When a section contains subsections, the
+# subsection sequence remains stable while records inside each subsection are
+# sorted from the largest order value to the smallest.
+sort_records_newest_first <- function(data, group_cols = NULL) {
+  if (!nrow(data) || !"order" %in% names(data)) return(data)
+
+  values <- suppressWarnings(as.numeric(data$order))
+  if (!length(group_cols)) {
+    return(data[order(-values, seq_len(nrow(data)), na.last = TRUE), , drop = FALSE])
+  }
+
+  key <- record_group_key(data, group_cols)
+  anchor <- ave(
+    values,
+    key,
+    FUN = function(x) if (all(is.na(x))) NA_real_ else min(x, na.rm = TRUE)
+  )
+
+  data[
+    order(-anchor, -values, seq_len(nrow(data)), na.last = TRUE),
+    ,
+    drop = FALSE
+  ]
 }
 
 markdown_link <- function(text, url) {
@@ -101,7 +139,10 @@ emit_cv_entry <- function(date, body) {
 }
 
 render_definition_entries_html <- function(data, cv, lang, numbered_when_undated = FALSE) {
-  data <- sort_by_order(shown_rows(data))
+  data <- sort_records_newest_first(
+    shown_rows(data),
+    group_cols = c("subsection_en", "subsection_it")
+  )
   if (!nrow(data)) return(invisible(NULL))
 
   subsection_col <- paste0("subsection_", lang)
@@ -165,7 +206,10 @@ render_definition_entries_html <- function(data, cv, lang, numbered_when_undated
 }
 
 render_definition_entries_pdf <- function(data, cv, lang, numbered_when_undated = FALSE) {
-  data <- sort_by_order(shown_rows(data))
+  data <- sort_records_newest_first(
+    shown_rows(data),
+    group_cols = c("subsection_en", "subsection_it")
+  )
   if (!nrow(data)) return(invisible(NULL))
 
   subsection_col <- paste0("subsection_", lang)

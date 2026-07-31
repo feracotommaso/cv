@@ -223,7 +223,7 @@ section_publications <- function(cv, lang) {
   }
   render_badge_legend(cv, lang)
 
-  data <- sort_by_order(shown_rows(cv$publications))
+  data <- sort_records_newest_first(shown_rows(cv$publications))
   self_pattern <- cv_setting(cv, "self_name_pattern", "Feraco, T.")
   citation_col <- paste0("citation_", lang)
   fallback_col <- paste0("citation_", if (lang == "en") "it" else "en")
