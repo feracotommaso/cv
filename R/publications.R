@@ -167,51 +167,89 @@ emit_publication_html <- function(number, text, badges = "") {
   cat("::::\n\n")
 }
 
-publication_index_count <- function(cv, database) {
-  data <- cv$metrics
-  if (!database %in% names(data)) return("")
-
-  row <- data[data$metric_id == "metric_03", , drop = FALSE]
-  if (!nrow(row)) {
-    publication_rows <- tolower(trimws(as.character(data$indicator_en))) == "publications"
-    row <- data[publication_rows, , drop = FALSE]
+publication_index_count <- function(cv, database = c("scopus", "wos")) {
+  database <- match.arg(database)
+  
+  data <- shown_rows(cv$publications)
+  
+  if (!"metrics_text" %in% names(data)) {
+    warning(
+      "The publications sheet does not contain a 'metrics_text' column.",
+      call. = FALSE
+    )
+    return(NA_integer_)
   }
-  if (!nrow(row)) return("")
-
-  value <- as.character(row[[database]][1])
-  if (nonempty(value)) value else ""
+  
+  metrics_text <- as.character(data$metrics_text)
+  metrics_text[is.na(metrics_text)] <- ""
+  
+  pattern <- switch(
+    database,
+    scopus = "\\bScopus\\b",
+    wos = "\\bJCR\\b"
+  )
+  
+  sum(
+    grepl(
+      pattern,
+      metrics_text,
+      ignore.case = TRUE,
+      perl = TRUE
+    )
+  )
 }
 
 render_publication_summary <- function(cv, lang) {
   data <- shown_rows(cv$publications)
+  
   total <- nrow(data)
+  
   first_last <- if ("first_last" %in% names(data)) {
     sum(data$first_last, na.rm = TRUE)
   } else {
     0L
   }
+  
   scopus <- publication_index_count(cv, "scopus")
   wos <- publication_index_count(cv, "wos")
-
-  if (!nonempty(scopus) || !nonempty(wos)) {
+  
+  if (is.na(scopus) || is.na(wos)) {
     warning(
-      "The publication summary could not find the Scopus or WOS publication total in the metrics sheet.",
+      paste(
+        "The publication summary could not calculate the",
+        "Scopus or Web of Science publication totals",
+        "from the publications sheet."
+      ),
       call. = FALSE
     )
   }
-
+  
   if (lang == "it") {
     sentence <- sprintf(
-      "Ho pubblicato **%s** articoli in riviste peer-reviewed, **%s** come primo/ultimo autore; **%s** sono indicizzati in Web of Science e **%s** in Scopus.",
-      total, first_last, wos, scopus
+      paste0(
+        "Ho pubblicato **%s** articoli in riviste peer-reviewed, ",
+        "**%s** come primo/ultimo autore; **%s** sono indicizzati ",
+        "in Web of Science e **%s** in Scopus."
+      ),
+      total,
+      first_last,
+      wos,
+      scopus
     )
   } else {
     sentence <- sprintf(
-      "I have published **%s** articles in peer-reviewed journals, **%s** as first/last author; **%s** are indexed in Web of Science and **%s** in Scopus.",
-      total, first_last, wos, scopus
+      paste0(
+        "I have published **%s** articles in peer-reviewed journals, ",
+        "**%s** as first/last author; **%s** are indexed in ",
+        "Web of Science and **%s** in Scopus."
+      ),
+      total,
+      first_last,
+      wos,
+      scopus
     )
   }
-
+  
   cat(sentence, "\n\n")
 }
 
